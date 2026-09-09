@@ -62,71 +62,21 @@ async function gerarCodigo() {
         return;
     }
 
-    const chaveApi = localStorage.getItem("groq_api_key");
-
-    if (!chaveApi) {
-        blocoCodigo.textContent = "API key não configurada.";
-        return;
-    }
-
     botao.textContent = "Gerando...";
     botao.disabled = true;
 
     try {
         const resposta = await fetch(
-            "https://api.groq.com/openai/v1/chat/completions",
+            "/api/generate",
             {
                 method: "POST",
 
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${chaveApi}`
+                    "Content-Type": "application/json"
                 },
 
                 body: JSON.stringify({
-                    model: "openai/gpt-oss-120b",
-
-                    messages: [
-                        {
-                            role: "system",
-                            content: `
-Você é um gerador de HTML e CSS.
-
-O usuário irá descrever algo que deseja criar.
-
-Responda SOMENTE com código.
-
-Não use Markdown.
-Não use crases.
-Não escreva explicações fora do código.
-
-Primeiro escreva o <style>.
-Depois escreva o HTML.
-
-Crie um resultado visual completo e funcional.
-
-Quando o pedido exigir uma imagem, use uma URL pública HTTPS válida em <img src="..."> ou em background-image. Nunca use caminhos locais inexistentes, como ./imagem.png.
-
-Se o usuário pedir animação:
-- use translateY para quicar;
-- use rotate para girar;
-- use @keyframes quando necessário.
-
-Adicione comentários no código explicando as partes importantes.
-                            `
-                        },
-
-                        {
-                            role: "user",
-                            content: textoUsuario
-                        }
-                    ],
-
-                    temperature: 1,
-                    max_completion_tokens: 2048,
-                    top_p: 1,
-                    stream: false,
-                    reasoning_effort: "medium"
+                    texto: textoUsuario
                 })
             }
         );
@@ -135,12 +85,11 @@ Adicione comentários no código explicando as partes importantes.
 
         if (!resposta.ok) {
             console.error(dados);
-            blocoCodigo.textContent = "Não foi possível gerar o código.";
+            blocoCodigo.textContent = dados?.error || "Não foi possível gerar o código.";
             return;
         }
 
-        const codigoGerado =
-            dados?.choices?.[0]?.message?.content;
+        const codigoGerado = dados?.codigo;
 
         if (!codigoGerado) {
             blocoCodigo.textContent = "Nenhum código foi gerado.";

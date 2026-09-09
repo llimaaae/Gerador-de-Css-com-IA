@@ -65,3 +65,9 @@ HTML + CSS
     ↓
 Código + Preview
 ```
+
+## Como publicar
+
+O projeto usa uma função serverless em `api/generate.js`, portanto o GitHub Pages sozinho não é suficiente. Publique este repositório na Vercel e configure a variável de ambiente `GROQ_API_KEY` com uma chave da Groq.
+
+Depois, faça um novo deploy. Os visitantes poderão usar o gerador sem configurar nenhuma chave no navegador.
