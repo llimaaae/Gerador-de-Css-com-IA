@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>Gerador de CSS com IA</title>
+
+<link rel="stylesheet" href="style.css">
+
+<!-- Fonte Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+
+</head>
+
+<body>
+
+<h1>
+    Gerador de <span>CSS</span> com IA
+</h1>
+
+<p>
+    Descreva o que você quer criar e deixe a IA gerar o código.
+</p>
+
+<textarea
+    class="caixa-texto"
+    rows="5"
+    placeholder="Ex: uma bola azul quicando..."
+></textarea>
+
+<button class="botao-gerar">
+    Gerar código
+</button>
+
+<section class="area-resultado">
+
+    <div class="bloco-codigo-wrapper">
+
+        <pre class="bloco-codigo"></pre>
+    </div>
+
+    <div class="bloco-preview-wrapper">
+
+        <iframe
+            class="resultado-codigo"
+            title="Preview do código gerado"
+        ></iframe>
+    </div>
+
+</section>
+
+<script src="script.js"></script>
+
+
+</body>
+</html>
