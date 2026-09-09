@@ -105,6 +105,8 @@ Depois escreva o HTML.
 
 Crie um resultado visual completo e funcional.
 
+Quando o pedido exigir uma imagem, use uma URL pública HTTPS válida em <img src="..."> ou em background-image. Nunca use caminhos locais inexistentes, como ./imagem.png.
+
 Se o usuário pedir animação:
 - use translateY para quicar;
 - use rotate para girar;
