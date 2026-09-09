@@ -1,170 +1,163 @@
-/* 
-    Variável - Pedacinho de memória
-    que eu posso guardar o que eu quiser
+const botao = document.querySelector(".botao-gerar");
+const caixaTexto = document.querySelector(".caixa-texto");
+const blocoCodigo = document.querySelector(".bloco-codigo");
+const preview = document.querySelector(".resultado-codigo");
 
-    Função - Pedacinho de código QUE só EXECUTA
-    Quando é chamado
+const modelo = "openai/gpt-oss-120b";
 
-    Algoritmo - Receita do Bolo
-    Lógica de Programação -  Fazer o bolo
-
-    // Algoritmo do nosso sistema
-    // Lógica de programação
-
-    [x] Saber quem é o botão
-    [x] Saber quando o botão foi clicado
-    [x] Saber quem é o textarea  
-    [x] Pegar o que tem dentro dele
-    [x] Enviar para a IA
-    [x] Pegar a resposta da IA e colocar na tela 
-    [/] Estilizar a resposta     
-
-    // Ir no HTML e pegar o botão
-    // HTML = document (documento)
-    // Selecionar (querySelector)
-    // Quem ? Botão
-    // Apelido para o botão - classes(class) = .
-    fetch - ferramenta do JS para se comunicar com o servidor
-*/
-
-// Descobri que é o botao
-let botao = document.querySelector(".botao-gerar")
-let modelo = "openai/gpt-oss-120b"
-
-function limparRespostaIA(conteudo) {
-    if (!conteudo) return ""
-
-    return conteudo
-        .replace(/```(?:html|css|xml)?/gi, "")
+function limparCodigo(codigo) {
+    return codigo
+        .replace(/```html/gi, "")
+        .replace(/```css/gi, "")
+        .replace(/```xml/gi, "")
         .replace(/```/g, "")
-        .trim()
+        .trim();
 }
 
 function prepararPreview(codigo) {
-    if (!codigo) return ""
+    if (!codigo) return "";
 
     if (codigo.includes("<style>")) {
-        return codigo.replace(/<\/style>/i, "html, body { margin: 0; min-height: 100%; height: 100%; } body { display: grid; place-items: center; } </style>")
+        return codigo.replace(
+            "</style>",
+            `
+            html, body {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            body {
+                display: grid;
+                place-items: center;
+            }
+            </style>
+            `
+        );
     }
 
     return `
-<style>
-  html, body { margin: 0; height: 100%; }
-  body { display: grid; place-items: center; }
-</style>
-${codigo}
-`
-}
+        <style>
+            html, body {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+            }
 
-function gerarFallback(textoUsuario) {
-    let descricao = textoUsuario?.trim() || "botão animado"
+            body {
+                display: grid;
+                place-items: center;
+            }
+        </style>
 
-    return `
-<style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    background: linear-gradient(135deg, #0f172a, #1e293b);
-    font-family: Arial, sans-serif;
-  }
-  .card {
-    width: min(420px, 85vw);
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    border-radius: 18px;
-    padding: 32px 24px;
-    text-align: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
-  }
-  h2 {
-    margin: 0 0 12px;
-    color: #f8fafc;
-    font-size: 28px;
-  }
-  p {
-    margin: 0 0 22px;
-    color: #cbd5e1;
-    font-size: 16px;
-  }
-  button {
-    border: none;
-    border-radius: 999px;
-    padding: 14px 28px;
-    background: linear-gradient(90deg, #2269c5, #075eff);
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    animation: pulse 1.5s infinite;
-  }
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-  }
-</style>
-<div class="card">
-  <h2>${descricao}</h2>
-  <p>Preview gerado localmente</p>
-  <button>Ver mais</button>
-</div>
-`
+        ${codigo}
+    `;
 }
 
 async function gerarCodigo() {
-    let textoUsuario = document.querySelector(".caixa-texto").value
-    let blocoCodigo = document.querySelector(".bloco-codigo")
-    let resultadoCodigo = document.querySelector(".resultado-codigo")
+    const textoUsuario = caixaTexto.value.trim();
 
-    if (!textoUsuario.trim()) {
-        document.querySelector(".caixa-texto").focus()
-        return
+    if (!textoUsuario) {
+        caixaTexto.focus();
+        return;
     }
 
-      let resultado = gerarFallback(textoUsuario)
+    const chaveApi = localStorage.getItem("groq_api_key");
+
+    if (!chaveApi) {
+        blocoCodigo.textContent = "API key não configurada.";
+        return;
+    }
+
+    botao.textContent = "Gerando...";
+    botao.disabled = true;
 
     try {
-        let resposta = await fetch("/api/gerar", {
-            method: "POST",
-            headers: {
-            "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: modelo,
-                messages: [
-                    { role: "system", content: "Você é um gerador de código HTML e CSS.Você é um gerador de código HTML e CSS. Responda SOMENTE com código puro. NUNCA use crases, markdown ou explicações. Formato: primeiro <style> com o CSS, depois o HTML. Siga EXATAMENTE o que o usuário pedir. Se pedir algo quicando, use translateY no @keyframes. Se pedir algo girando, use rotate. Faca comentarios explicando tudo que foi feito alem de formatar o codigo." },
-                    { role: "user", content: textoUsuario }
-                ]
-            })
-        })
+        const resposta = await fetch(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${chaveApi}`
+                },
+
+                body: JSON.stringify({
+                    model: "openai/gpt-oss-120b",
+
+                    messages: [
+                        {
+                            role: "system",
+                            content: `
+Você é um gerador de HTML e CSS.
+
+O usuário irá descrever algo que deseja criar.
+
+Responda SOMENTE com código.
+
+Não use Markdown.
+Não use crases.
+Não escreva explicações fora do código.
+
+Primeiro escreva o <style>.
+Depois escreva o HTML.
+
+Crie um resultado visual completo e funcional.
+
+Se o usuário pedir animação:
+- use translateY para quicar;
+- use rotate para girar;
+- use @keyframes quando necessário.
+
+Adicione comentários no código explicando as partes importantes.
+                            `
+                        },
+
+                        {
+                            role: "user",
+                            content: textoUsuario
+                        }
+                    ],
+
+                    temperature: 1,
+                    max_completion_tokens: 2048,
+                    top_p: 1,
+                    stream: false,
+                    reasoning_effort: "medium"
+                })
+            }
+        );
+
+        const dados = await resposta.json();
 
         if (!resposta.ok) {
-            const texto = await resposta.text()
-            console.error("Erro da Groq:", resposta.status, texto)
-            return
+            console.error(dados);
+            blocoCodigo.textContent = "Não foi possível gerar o código.";
+            return;
         }
 
-        let dados = await resposta.json()
-        let conteudoApi = dados?.choices?.[0]?.message?.content
+        const codigoGerado =
+            dados?.choices?.[0]?.message?.content;
 
-        if (conteudoApi) {
-            resultado = limparRespostaIA(conteudoApi)
+        if (!codigoGerado) {
+            blocoCodigo.textContent = "Nenhum código foi gerado.";
+            return;
         }
-    } catch (error) {
-        console.error(error)
+
+        const codigoLimpo = limparCodigo(codigoGerado);
+
+        blocoCodigo.textContent = codigoLimpo;
+
+        preview.srcdoc = prepararPreview(codigoLimpo);
+
+    } catch (erro) {
+        console.error(erro);
+        blocoCodigo.textContent = "Erro ao gerar o código.";
     }
 
-    blocoCodigo.textContent = resultado
-    resultadoCodigo.srcdoc = prepararPreview(resultado)
+    botao.textContent = "Gerar código";
+    botao.disabled = false;
 }
 
-// ficar de olho no botao, quando clicado chamar o gerarCodigo
-botao.addEventListener("click", gerarCodigo)
-
-
-
-// vizinho curioso (addEventListener)
-// adicionar ouvinte de eventos
+botao.addEventListener("click", gerarCodigo);
